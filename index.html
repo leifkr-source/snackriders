@@ -60,13 +60,15 @@ h2{font-size:clamp(11px,2.6vw,16px);line-height:1.6;padding-top:4px;margin:0;col
 @media (pointer:fine){.tb{display:none}}
 #rot{display:none;position:fixed;top:calc(8px + env(safe-area-inset-top));left:0;right:0;text-align:center;font-size:7px;line-height:2;color:#8f97b8;z-index:2}
 @media (orientation:portrait) and (pointer:coarse){#rot{display:block}}
+#zoom{display:none}
+@media (orientation:portrait){#zoom{display:inline-block}#ui{bottom:calc(104px + env(safe-area-inset-bottom))}}
 </style>
 </head>
 <body>
 <div id="wrap"><canvas id="game"></canvas></div>
 
 <div id="rot">Tipp: quer halten = breiteres Bild</div>
-<div id="ui"><button id="fs" title="Vollbild">⛶</button><button id="mute" title="Ton an/aus">🔊</button></div>
+<div id="ui"><button id="fs" title="Vollbild">⛶</button><button id="zoom" title="Zoom">🔍</button><button id="mute" title="Ton an/aus">🔊</button></div>
 <div class="tb" id="tl">◀</div>
 <div class="tb" id="tr">▶</div>
 <div class="tb" id="tj">JUMP</div>
@@ -109,7 +111,8 @@ h2{font-size:clamp(11px,2.6vw,16px);line-height:1.6;padding-top:4px;margin:0;col
 <script>
 'use strict';
 const TILE=16, ROWS=14, H=ROWS*TILE, HUDH=18;
-let VH=144;
+let VH=144, zoomNear=false;
+try{ zoomNear=localStorage.getItem('snackjagd-zoom')==='near'; }catch(e){}
 let W=256;
 const cv=document.getElementById('game'), ctx=cv.getContext('2d');
 function resize(){
@@ -119,7 +122,7 @@ function resize(){
   const portrait=ih>iw*1.1;
   VH=portrait?H:144;
   const CH=VH+HUDH;
-  W=portrait?Math.max(176,Math.min(240,Math.round(CH*iw/ih))):Math.max(200,Math.min(380,Math.round(CH*iw/ih)));
+  W=portrait?(zoomNear?Math.max(176,Math.min(240,Math.round(CH*iw/ih))):Math.max(260,Math.min(300,Math.round(CH*iw/ih)*1.6))):Math.max(200,Math.min(380,Math.round(CH*iw/ih)));
   cv.width=W; cv.height=CH;
   const s=Math.min(iw/W, ih/CH);
   cv.style.width=(W*s)+'px'; cv.style.height=(CH*s)+'px';
@@ -1024,6 +1027,7 @@ document.getElementById('charBtn').addEventListener('click',()=>{ hideAll(); doc
       else { const pr=req.call(de); if(pr&&pr.catch) pr.catch(()=>{}); } }catch(err){} });
   ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>setTimeout(resize,50)));
 })();
+document.getElementById('zoom').addEventListener('click',e=>{ zoomNear=!zoomNear; try{ localStorage.setItem('snackjagd-zoom',zoomNear?'near':'wide'); }catch(err){} resize(); e.currentTarget.blur(); });
 document.getElementById('mute').addEventListener('click',e=>{ muted=!muted; if(musicGain) musicGain.gain.value=muted?0:0.5; e.currentTarget.textContent=muted?'🔇':'🔊'; e.currentTarget.blur(); });
 </script>
 </body>
